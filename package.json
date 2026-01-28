@@ -1,0 +1,29 @@
+{
+  "name": "effect-auth-api",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --env-file=.env --watch src/main.ts",
+    "build": "tsc",
+    "test": "vitest",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.90.3",
+    "@effect/platform-node": "^0.96.0",
+    "@effect/sql": "^0.44.1",
+    "@effect/sql-pg": "^0.50.1",
+    "bcrypt": "^5.1.1",
+    "effect": "^3.17.7",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@effect/language-service": "^0.72.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  }
+}
