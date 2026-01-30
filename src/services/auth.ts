@@ -47,13 +47,17 @@ export class Authentication extends Effect.Service<Authentication>()(
           const user = Option.getOrNull(result);
 
           if (!user) {
-            return yield* new ValidationError({ message: "wrong password" });
+            return yield* new ValidationError({
+              message: "wrong email or password",
+            });
           }
 
           const isValid = yield* compare(password, user.password);
 
           if (!isValid) {
-            return yield* new ValidationError({ message: "wrong password" });
+            return yield* new ValidationError({
+              message: "wrong email or password",
+            });
           }
 
           // Generate JWT token

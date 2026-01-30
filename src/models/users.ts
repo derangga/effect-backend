@@ -15,9 +15,9 @@ export class User extends Model.Class<User>("User")({
   name: Schema.NonEmptyString,
   email: Email,
   password: Password,
-  created_at: Model.DateTimeInsert,
-  updated_at: Model.DateTimeUpdate,
-  deleted_at: Schema.optional(Schema.Date),
+  created_at: Model.DateTimeInsertFromDate,
+  updated_at: Model.DateTimeUpdateFromDate,
+  deleted_at: Schema.optional(Schema.NullOr(Schema.Date)),
 }) {}
 
 export class UserPublic extends Model.Class<UserPublic>("UserPublic")({
