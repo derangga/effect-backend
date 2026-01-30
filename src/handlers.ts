@@ -33,13 +33,10 @@ export const AuthHandlersLive = HttpApiBuilder.group(
       .handle("login", ({ payload }) =>
         Effect.gen(function* () {
           const authService = yield* Authentication;
-          const token = yield* authService
-            .login(Email.make(payload.email), Password.make(payload.password))
-            .pipe(
-              Effect.mapError(
-                (e) => new ValidationError({ message: `${e.message}` }),
-              ),
-            );
+          const token = yield* authService.login(
+            Email.make(payload.email),
+            Password.make(payload.password),
+          );
           return { token };
         }),
       )
