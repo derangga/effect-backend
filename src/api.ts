@@ -4,6 +4,7 @@ import {
   DatabaseError,
   Unauthorized,
   ValidationError,
+  SessionError,
 } from "./errors";
 import {
   LoginRequest,
@@ -26,6 +27,7 @@ export class AuthApi extends HttpApi.make("AuthApi").add(
     .add(
       HttpApiEndpoint.post("login", "/api/login")
         .addError(ValidationError)
+        .addError(SessionError)
         .addError(DatabaseError)
         .setPayload(LoginRequest)
         .addSuccess(LoginResponse),

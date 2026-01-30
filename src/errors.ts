@@ -36,3 +36,9 @@ export class DatabaseError extends Schema.TaggedError<DatabaseError>()(
 export class TokenError extends Data.TaggedError("TokenError")<{
   message: string;
 }> {}
+
+export class SessionError extends Schema.TaggedError<SessionError>()(
+  "SessionError",
+  { message: Schema.String },
+  HttpApiSchema.annotations({ status: 422 }),
+) {}

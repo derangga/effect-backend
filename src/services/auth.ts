@@ -1,6 +1,6 @@
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option, pipe, Schema } from "effect";
 import { UserRepository } from "../repositories/users-repo";
-import { ValidationError } from "../errors";
+import { SessionError, ValidationError } from "../errors";
 import bcrypt from "bcrypt";
 import { Jwt } from "./jwt";
 import { Email } from "../models/email";
@@ -60,10 +60,17 @@ export class Authentication extends Effect.Service<Authentication>()(
             });
           }
 
-          // Generate JWT token
-          const token = yield* jwtService.signJwt({
-            userId: user.id,
-          });
+          const token = yield* pipe(
+            jwtService.signJwt({
+              userId: user.id,
+            }),
+            Effect.mapError(
+              () =>
+                new SessionError({
+                  message: "session generation failed, please try again later",
+                }),
+            ),
+          );
 
           return token;
         });
@@ -80,11 +87,15 @@ export class Authentication extends Effect.Service<Authentication>()(
             });
           }
 
-          // Hash password
           const hashedPassword = yield* hash(password);
-          const passwordBrand = yield* Schema.decode(Password)(hashedPassword);
+          const passwordBrand = yield* pipe(
+            Schema.decode(Password)(hashedPassword),
+            Effect.mapError(
+              () =>
+                new ValidationError({ message: "failed transform password" }),
+            ),
+          );
 
-          // Create user
           yield* userRepo.insert(
             User.insert.make({ name, email, password: passwordBrand }),
           );
