@@ -5,7 +5,6 @@ import bcrypt from "bcrypt";
 import { Jwt } from "./jwt";
 import { Email } from "../models/email";
 import { Password } from "../models/password";
-import { User } from "../models/users";
 import { AppConfig } from "../configs/env";
 
 export class Authentication extends Effect.Service<Authentication>()(
@@ -96,9 +95,7 @@ export class Authentication extends Effect.Service<Authentication>()(
             ),
           );
 
-          yield* userRepo.insert(
-            User.insert.make({ name, email, password: passwordBrand }),
-          );
+          yield* userRepo.insert({ name, email, password: passwordBrand });
 
           return "register successfully";
         });

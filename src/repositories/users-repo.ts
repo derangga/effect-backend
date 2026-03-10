@@ -1,47 +1,74 @@
-import { Model, SqlClient, SqlSchema } from "@effect/sql";
-import { Effect, pipe } from "effect";
+import { Effect, Option } from "effect";
+import { eq, and, isNull } from "drizzle-orm";
+import { DrizzleDB } from "../db/index";
+import { users } from "../db/schema";
 import { DatabaseError } from "../errors";
-import { User } from "../models/users";
+import { User, UserId } from "../models/users";
 import { Email } from "../models/email";
+import { Password } from "../models/password";
 import { PgLive } from "../postgre";
+
+const mapRow = (row: typeof users.$inferSelect): User =>
+  User.make({
+    id: UserId.make(row.id),
+    name: row.name as User["name"],
+    email: row.email as Email,
+    password: row.password as Password,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    deleted_at: row.deleted_at ?? undefined,
+  });
 
 export class UserRepository extends Effect.Service<UserRepository>()(
   "UserRepository",
   {
     effect: Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      const repo = yield* Model.makeRepository(User, {
-        tableName: "users",
-        spanPrefix: "UsersRepository",
-        idColumn: "id",
-      });
+      const db = yield* DrizzleDB;
 
-      const findByEmail = (email: Email) => {
-        const findByEmailSchema = SqlSchema.findOne({
-          Request: Email,
-          Result: User,
-          execute: (
-            key,
-          ) => sql`SELECT id, name, email, password, created_at, updated_at, deleted_at
-          FROM users
-          WHERE email = ${key} AND deleted_at IS NULL`,
-        });
-
-        return pipe(
-          findByEmailSchema(email),
-          Effect.mapError((e) => {
-            console.log(e);
-            return new DatabaseError({
-              message: "failed to find user by email",
-            });
-          }),
+      const findById = (id: UserId) =>
+        Effect.gen(function* () {
+          const rows = yield* db
+            .select()
+            .from(users)
+            .where(and(eq(users.id, id), isNull(users.deleted_at)))
+            .limit(1);
+          return Option.fromNullable(rows[0] ?? null).pipe(Option.map(mapRow));
+        }).pipe(
+          Effect.mapError(
+            () => new DatabaseError({ message: "failed to find user" }),
+          ),
         );
-      };
 
-      return {
-        ...repo,
-        findByEmail,
-      };
+      const findByEmail = (email: Email) =>
+        Effect.gen(function* () {
+          const rows = yield* db
+            .select()
+            .from(users)
+            .where(and(eq(users.email, email), isNull(users.deleted_at)))
+            .limit(1);
+          return Option.fromNullable(rows[0] ?? null).pipe(Option.map(mapRow));
+        }).pipe(
+          Effect.mapError(
+            () =>
+              new DatabaseError({ message: "failed to find user by email" }),
+          ),
+        );
+
+      const insert = (data: {
+        name: string;
+        email: Email;
+        password: Password;
+      }) =>
+        db
+          .insert(users)
+          .values(data)
+          .pipe(
+            Effect.mapError(
+              () => new DatabaseError({ message: "failed to insert user" }),
+            ),
+          );
+
+      return { findById, findByEmail, insert };
     }),
     dependencies: [PgLive],
   },
