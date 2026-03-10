@@ -11,9 +11,9 @@ import { PgLive } from "../postgre";
 const mapRow = (row: typeof users.$inferSelect): User =>
   User.make({
     id: UserId.make(row.id),
-    name: row.name as User["name"],
-    email: row.email as Email,
-    password: row.password as Password,
+    name: row.name,
+    email: Email.make(row.email),
+    password: Password.make(row.password),
     created_at: row.created_at,
     updated_at: row.updated_at,
     deleted_at: row.deleted_at ?? undefined,
